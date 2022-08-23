@@ -53,7 +53,7 @@ public class PostRestController {
     public boolean existsByPostIdAndUserId (Long postId, Long userId) {
         //TODO: имплементация проверки поста и юзера (валидация только в контролере, в PostService не добавляем?):
         /*
-         * if (exists(postId) && (userId == findPost(postId).userId)) {
+         * if (exists(postId) && (userId == findPost(postId).getUserId())) {
          *      return true;
          *  }
          *  return false;
