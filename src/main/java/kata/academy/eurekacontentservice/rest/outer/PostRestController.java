@@ -1,57 +1,63 @@
 package kata.academy.eurekacontentservice.rest.outer;
 
+
 import kata.academy.eurekacontentservice.api.Response;
+import kata.academy.eurekacontentservice.model.converter.PostMapper;
 import kata.academy.eurekacontentservice.model.dto.PostPersistRequestDto;
 import kata.academy.eurekacontentservice.model.dto.PostUpdateRequestDto;
 import kata.academy.eurekacontentservice.model.entity.Post;
-import kata.academy.eurekacontentservice.model.entity.PostTag;
 import kata.academy.eurekacontentservice.service.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
-import java.util.List;
 
-
+@Validated
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/posts")
 public class PostRestController {
 
     private PostService postService;
 
-    @Autowired
-    public PostRestController(PostService postService) {
-        this.postService = postService;
+    @PostMapping
+    Response<Post> addPost(@Valid @RequestBody PostPersistRequestDto dto, @RequestParam @Positive Long userId) {
+        return Response.ok(postService.addPost(dto));
     }
 
-    @GetMapping
-    public List<Post> getAllPosts () {
-        return postService.getAllPosts();
+
+    @PutMapping("/{postId}")
+    public Response<Post> updatePost(@Valid @RequestBody PostUpdateRequestDto dto,
+                                     @PathVariable @Positive Long postId,
+                                     @RequestParam @Positive Long userId) {
+        if (existsByPostIdAndUserId(postId, userId)) {
+            Post post = PostMapper.toEntity(dto, postId, userId);
+            return Response.ok(postService.updatePost(post));
+        }
+        return Response.error("post does not exist for current user");
     }
 
-    @PostMapping("/addPost")
-    Response<Post> addPost(PostPersistRequestDto dto, @RequestParam @Positive Long userId) {
-        return Response.ok(postService.addPost(dto,userId));
+    @Positive
+    @DeleteMapping("/{postId}")
+    public Response<Void> deletePost(@PathVariable Long postId, @RequestParam @Positive Long userId){
+        if (existsByPostIdAndUserId(postId, userId)) {
+            postService.deletePost(postId);
+            return Response.ok();
+        }
+        return Response.error("post does not exist for current user");
     }
 
-    @PutMapping("/update/{postId}")
-    Response<Post> updatePost(@RequestBody PostUpdateRequestDto dto, @PathVariable @Positive Long postId, @RequestParam @Positive Long userId) {
-        return Response.ok(postService.updatePost(dto, postId, userId));
-    }
 
-    @DeleteMapping("/delete/{postId}")
-    Response<Void> deletePost(@PathVariable Long postId, @RequestParam @Positive Long userId){
-        postService.deletePost(postId, userId);
-        return Response.ok();
-    }
-
-    @GetMapping("/tags")
-    public List<PostTag> getAllTags () {
-        return postService.getAllTags();
-    }
-
-    @GetMapping("/{tag}")
-    public Response<List<Post>> getPostByTag (@PathVariable String tag) {
-        return Response.ok(postService.getPostByTag(tag));
+    public boolean existsByPostIdAndUserId (Long postId, Long userId) {
+        //TODO: имплементация проверки поста и юзера (валидация только в контролере, в PostService не добавляем?):
+        /*
+         * if (exists(postId) && (userId == findPost(postId).userId)) {
+         *      return true;
+         *  }
+         *  return false;
+         */
+        return true;
     }
 }

@@ -1,40 +1,38 @@
 package kata.academy.eurekacontentservice.model.converter;
 
+
 import kata.academy.eurekacontentservice.model.dto.PostPersistRequestDto;
 import kata.academy.eurekacontentservice.model.dto.PostUpdateRequestDto;
 import kata.academy.eurekacontentservice.model.entity.Post;
 
-public class PostMapper {
+public final class PostMapper {
 
-    public static Post mapToEntity (PostPersistRequestDto dto, Long userId) {
+    private PostMapper() {
+    }
+
+    public static Post toEntity(PostPersistRequestDto dto) {
         Post post = new Post();
         post.setText(dto.text());
         post.setTitle(dto.title());
         post.setTags(dto.tags());
-
-        // TODO: добавить проверку на корректного юзера?:
-
-//        if (userId == loggedInUserId) {
-//            post.setUserId(userId);
-//        } else {
-//            throw new IllegalArgumentException("incorrect user id");
-//        }
         return post;
     }
 
-    public static Post mapToEntity (PostUpdateRequestDto dto, Long userId) {
+    public static Post toEntity(PostUpdateRequestDto dto) {
         Post post = new Post();
         post.setText(dto.text());
         post.setTitle(dto.title());
         post.setTags(dto.tags());
+        return post;
+    }
 
-        // TODO: добавить проверку на корректного юзера?:
-
-//        if (userId == loggedInUserId) {
-//            post.setUserId(userId);
-//        } else {
-//            throw new IllegalArgumentException("incorrect user id");
-//        }
+    public static Post toEntity(PostUpdateRequestDto dto, Long postId, Long userId) {
+        Post post = new Post();
+        post.setText(dto.text());
+        post.setTitle(dto.title());
+        post.setTags(dto.tags());
+        post.setId(postId);
+        post.setUserId(userId);
         return post;
     }
 }
