@@ -1,12 +1,15 @@
 package kata.academy.eurekacontentservice.rest.outer;
 
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import kata.academy.eurekacontentservice.api.Response;
 import kata.academy.eurekacontentservice.model.converter.PostMapper;
 import kata.academy.eurekacontentservice.model.dto.PostPersistRequestDto;
 import kata.academy.eurekacontentservice.model.dto.PostUpdateRequestDto;
 import kata.academy.eurekacontentservice.model.entity.Post;
 import kata.academy.eurekacontentservice.service.PostService;
+import kata.academy.eurekacontentservice.util.ApiValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,50 +17,47 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 
-@Validated
 @RequiredArgsConstructor
+@Validated
 @RestController
 @RequestMapping("/api/v1/posts")
 public class PostRestController {
 
-    private PostService postService;
+    private final PostService postService;
 
+    @Operation(summary = "Создание нового поста")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Новый пост успешно создан")
+    })
     @PostMapping
-    Response<Post> addPost(@Valid @RequestBody PostPersistRequestDto dto, @RequestParam @Positive Long userId) {
-        return Response.ok(postService.addPost(dto));
+    public Response<Post> addPost(@RequestBody @Valid PostPersistRequestDto dto,
+                                  @RequestParam @Positive Long userId) {
+        Post post = PostMapper.toEntity(dto);
+        post.setUserId(userId);
+        return Response.ok(postService.addPost(post));
     }
 
-
+    @Operation(summary = "Обновление существующего поста")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Существующий пост успешно обновлен"),
+            @ApiResponse(responseCode = "400", description = "Пост не найден")
+    })
     @PutMapping("/{postId}")
-    public Response<Post> updatePost(@Valid @RequestBody PostUpdateRequestDto dto,
+    public Response<Post> updatePost(@RequestBody @Valid PostUpdateRequestDto dto,
                                      @PathVariable @Positive Long postId,
                                      @RequestParam @Positive Long userId) {
-        if (existsByPostIdAndUserId(postId, userId)) {
-            Post post = PostMapper.toEntity(dto, postId, userId);
-            return Response.ok(postService.updatePost(post));
-        }
-        return Response.error("post does not exist for current user");
+        ApiValidationUtil.requireTrue(postService.existsByIdAndUserId(postId, userId), String.format("Пост с postId %d и userId %d нет в базе данных", postId, userId));
+        Post post = PostMapper.toEntity(dto);
+        post.setId(postId);
+        post.setUserId(userId);
+        return Response.ok(postService.updatePost(post));
     }
 
-    @Positive
     @DeleteMapping("/{postId}")
-    public Response<Void> deletePost(@PathVariable Long postId, @RequestParam @Positive Long userId){
-        if (existsByPostIdAndUserId(postId, userId)) {
-            postService.deletePost(postId);
-            return Response.ok();
-        }
-        return Response.error("post does not exist for current user");
-    }
-
-
-    public boolean existsByPostIdAndUserId (Long postId, Long userId) {
-        //TODO: имплементация проверки поста и юзера (валидация только в контролере, в PostService не добавляем?):
-        /*
-         * if (exists(postId) && (userId == findPost(postId).getUserId())) {
-         *      return true;
-         *  }
-         *  return false;
-         */
-        return true;
+    public Response<Void> deletePost(@PathVariable @Positive Long postId,
+                                     @RequestParam @Positive Long userId) {
+        ApiValidationUtil.requireTrue(postService.existsByIdAndUserId(postId, userId), String.format("Пост с postId %d и userId %d нет в базе данных", postId, userId));
+        postService.deleteById(postId);
+        return Response.ok();
     }
 }
