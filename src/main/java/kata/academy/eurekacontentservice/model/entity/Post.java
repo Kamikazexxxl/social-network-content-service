@@ -1,0 +1,61 @@
+package kata.academy.eurekacontentservice.model.entity;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.util.*;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "posts")
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull
+    @Column(nullable = false)
+    private Long id;
+
+    @NotNull
+    @Column(nullable = false)
+    private Long userId;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String title;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String text;
+
+    @ElementCollection
+    @CollectionTable(name = "posts_tags",
+            joinColumns=@JoinColumn(name = "id_tags"))
+    private List<String> tags = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Post post = (Post) o;
+        return Objects.equals(id, post.id)
+                && Objects.equals(userId, post.userId)
+                && Objects.equals(title, post.title)
+                && Objects.equals(text, post.text)
+                && Objects.equals(tags, post.tags);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, userId, title, text, tags);
+    }
+}
