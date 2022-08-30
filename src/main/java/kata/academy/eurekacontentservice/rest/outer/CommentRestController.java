@@ -63,8 +63,8 @@ public class CommentRestController {
                                            @PathVariable @Positive Long postId,
                                            @PathVariable @Positive Long commentId,
                                            @RequestParam @Positive Long userId) {
-        ApiValidationUtil.requireTrue(commentService.existsByCommentIdAndPostId(commentId, postId), String.format
-                ("Пост с postId %d и commentId %d нет в базе данных", postId, commentId));
+        ApiValidationUtil.requireTrue(commentService.existsByCommentIdAndPostId(commentId, postId),
+                String.format("Пост с postId %d и commentId %d нет в базе данных", postId, commentId));
         Comment comment = CommentMapper.toEntity(dto);
         Post post = new Post();
         post.setId(postId);
@@ -78,8 +78,8 @@ public class CommentRestController {
     public Response<Void> deleteComment(@PathVariable @Positive Long postId,
                                         @PathVariable @Positive Long commentId,
                                         @RequestParam @Positive Long userId) {
-        ApiValidationUtil.requireTrue(commentService.existsByCommentIdAndPostId(commentId, postId), String.format
-                ("Пост с postId %d и userId %d нет в базе данных", postId, userId));
+        ApiValidationUtil.requireTrue(commentService.existsByCommentIdAndPostId(commentId, postId),
+                String.format("Пост с postId %d и userId %d нет в базе данных", postId, userId));
         commentService.deleteById(commentId);
         return Response.ok();
     }
